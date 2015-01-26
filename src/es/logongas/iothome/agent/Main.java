@@ -5,18 +5,13 @@
  */
 package es.logongas.iothome.agent;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import es.logongas.iothome.agent.http.Http;
+import es.logongas.iothome.agent.storage.Storage;
 import es.logongas.iothome.modelo.Measure;
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
+import es.logongas.iothome.agent.arduino.Microcontroller;
 import java.net.URL;
 import java.util.Date;
-import java.util.Random;
+import java.util.List;
 
 /**
  *
@@ -24,47 +19,57 @@ import java.util.Random;
  */
 public class Main {
 
+    static Microcontroller microcontroller = null;
+
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws MalformedURLException, FileNotFoundException, IOException {
+    public static void main(String[] args) throws Exception {
 
-        while (1 == 1) {
+        List<Measure> measures;
 
-            Http http = new Http();
-            URL url = new URL("http://localhost:8084/iothome/api/Measure");
+        String configFileName;
+        if (args.length==0) {
+            configFileName="iothomeagent.cfg.json";
+        } else {
+            configFileName=args[0];
+        }
+        
+        Config config = ConfigLoader.getConfig(configFileName);
 
-            Random random = new Random();
-            double d1 = 1000 + (random.nextGaussian() * 200);
-            double d2 = 1000 + (random.nextGaussian() * 200);
-            double d3 = 1000 + (random.nextGaussian() * 200);
-
-            Measure measure = new Measure();
-            measure.getDevice().setIdDevice(1);
-            measure.setTime(new Date());
-            measure.setStream0(d1);
-            measure.setStream1(d2);
-            measure.setStream2(d3);
-
-            
-            
-            //Guardarlo a fichero
-                        ObjectMapper objectMapper=new ObjectMapper();
-            
-            
-            
-
-            OutputStream outputStream=new BufferedOutputStream(new FileOutputStream("measures.json"));
-            objectMapper.writeValue(outputStream,measure);
-            
-            http.post(url, measure);
-
-            try {
-                Thread.sleep(5000);                
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
+        List<Double> powers;
+        try {
+            microcontroller = new Microcontroller(config.getComPort());
+            powers = microcontroller.getPowers();
+        } finally {
+            if (microcontroller != null) {
+                microcontroller.close();
             }
         }
-    }
+        
+        Measure measure = new Measure();
+        measure.getDevice().setIdDevice(config.getIdDevice());
+        measure.setTime(new Date());
+        measure.setStream0(powers.get(0));
+        measure.setStream1(powers.get(0));
+        measure.setStream2(powers.get(0));
 
+        Storage storage = new Storage(config.getMeasuresFileName());
+        measures = storage.get();
+        measures.add(measure);
+        storage.save(measures);
+
+        Http http = new Http();
+        URL url = new URL(config.getUrl());
+        do {
+            measures = storage.get();
+            if (measures.size() > 0) {
+                measure = measures.get(0);
+                http.post(url, measure);
+                measures.remove(measure);
+                storage.save(measures);
+            }
+
+        } while (measures.size() != 0);
+    }
 }
