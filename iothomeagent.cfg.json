@@ -2,5 +2,6 @@
     "comPort": "COM3",
     "url": "http://192.168.1.100:8084/iothome/api/Measure",
     "idDevice": 1,
-    "measuresFileName" : "measures.json"
+    "measuresFileName" : "measures.json",
+    "sleep":10000
 }

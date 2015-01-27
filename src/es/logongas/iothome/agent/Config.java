@@ -17,6 +17,7 @@ public class Config {
     private String url;
     private int idDevice;
     private String measuresFileName;
+    private int sleep;
     
     /**
      * @return the comPort
@@ -72,6 +73,20 @@ public class Config {
      */
     public void setMeasuresFileName(String measuresFileName) {
         this.measuresFileName = measuresFileName;
+    }
+
+    /**
+     * @return the sleep
+     */
+    public int getSleep() {
+        return sleep;
+    }
+
+    /**
+     * @param sleep the sleep to set
+     */
+    public void setSleep(int sleep) {
+        this.sleep = sleep;
     }
     
 

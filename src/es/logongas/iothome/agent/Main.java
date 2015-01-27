@@ -20,56 +20,105 @@ import java.util.List;
 public class Main {
 
     static Microcontroller microcontroller = null;
+    static Config config;
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws Exception {
-
-        List<Measure> measures;
-
-        String configFileName;
-        if (args.length==0) {
-            configFileName="iothomeagent.cfg.json";
-        } else {
-            configFileName=args[0];
-        }
-        
-        Config config = ConfigLoader.getConfig(configFileName);
-
-        List<Double> powers;
+    public static void main(String[] args) {
         try {
-            microcontroller = new Microcontroller(config.getComPort());
-            powers = microcontroller.getPowers();
-        } finally {
-            if (microcontroller != null) {
-                microcontroller.close();
+            inicialize(args);
+
+            boolean salir = false;
+            while (salir == false) {
+
+                try {
+
+                    Measure measure = getMeasure();
+
+                    saveMeasure(measure);
+
+                    sendMeasures();
+
+                    try {
+                        Thread.sleep(config.getSleep());
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    if (System.in.available() > 0) {
+                        salir = true;
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
             }
+        } finally {
+            destroy();
         }
-        
+
+    }
+
+    static private void inicialize(String[] args) {
+        String configFileName;
+        if (args.length == 0) {
+            configFileName = "iothomeagent.cfg.json";
+        } else {
+            configFileName = args[0];
+        }
+
+        config = ConfigLoader.getConfig(configFileName);
+        microcontroller = new Microcontroller(config.getComPort());
+    }
+
+    static private void destroy() {
+        if (microcontroller != null) {
+            microcontroller.close();
+        }
+    }
+
+    static private Measure getMeasure() {
+        List<Float> powers = microcontroller.getPowers();
+
         Measure measure = new Measure();
         measure.getDevice().setIdDevice(config.getIdDevice());
         measure.setTime(new Date());
         measure.setStream0(powers.get(0));
-        measure.setStream1(powers.get(0));
-        measure.setStream2(powers.get(0));
+        measure.setStream1(powers.get(1));
+        measure.setStream2(powers.get(2));
+        
+        return measure;
+    }
 
+    static private void saveMeasure(Measure measure) {
         Storage storage = new Storage(config.getMeasuresFileName());
-        measures = storage.get();
+        List<Measure> measures = storage.get();
         measures.add(measure);
         storage.save(measures);
-
-        Http http = new Http();
-        URL url = new URL(config.getUrl());
-        do {
-            measures = storage.get();
-            if (measures.size() > 0) {
-                measure = measures.get(0);
-                http.post(url, measure);
-                measures.remove(measure);
-                storage.save(measures);
-            }
-
-        } while (measures.size() != 0);
     }
+
+    static private void sendMeasures() {
+        try {
+            Storage storage = new Storage(config.getMeasuresFileName());
+            Http http = new Http();
+            URL url = new URL(config.getUrl());
+            List<Measure> measures;
+            do {
+                measures = storage.get();
+                if (measures.size() > 0) {
+                    Measure measure = measures.get(0);
+                    http.post(url, measure);
+                    measures.remove(measure);
+                    storage.save(measures);
+                }
+
+            } while (measures.size() != 0);
+
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 }

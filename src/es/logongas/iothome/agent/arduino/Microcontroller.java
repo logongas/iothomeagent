@@ -47,7 +47,7 @@ public class Microcontroller implements SerialPortEventListener {
     static private String appName = "Microcontroller";
     
     private String _portName;
-    private SerialPort _serialPort;
+    private SerialPort _serialPort=null;
     
     private InputStream _inputStream;
     private OutputStream _outputStream;
@@ -69,7 +69,9 @@ public class Microcontroller implements SerialPortEventListener {
     }
     
     public void close() {
-        _serialPort.close();
+        if (_serialPort!=null) {
+            _serialPort.close();
+        }
     }
     
     
@@ -101,26 +103,29 @@ public class Microcontroller implements SerialPortEventListener {
     }
 
    
-    public List<Double> getPowers() {
+    public List<Float> getPowers() {
         String command=COMMAND_SCT_013_READ + ";";
         
         sendCommand(command);
         
         int raw0=Integer.parseInt(readLine());
-        double power0=Double.parseDouble(readLine()); 
+        float power0=Float.parseFloat(readLine()); 
         int raw1=Integer.parseInt(readLine());
-        double power1=Double.parseDouble(readLine()); 
+        float power1=Float.parseFloat(readLine()); 
         int raw2=Integer.parseInt(readLine()); 
-        double power2=Double.parseDouble(readLine()); 
+        float power2=Float.parseFloat(readLine()); 
         
-        List<Double> powers=new ArrayList<Double>();
+        List<Float> powers=new ArrayList<Float>();
         powers.add(power0);
         powers.add(power1);
         powers.add(power2);
         
-        System.out.println(raw0 + " " + raw1 + " " + raw2);
-        System.out.println(power0 + " " + power1 + " " + power2);
-        
+        if ((raw0>1000) ||(raw1>1000) || (raw2>1000)) {
+            System.out.println(raw0 + " " + raw1 + " " + raw2);
+            this.close();
+            System.exit(1);
+        }
+
         return powers;
         
     }
@@ -188,7 +193,6 @@ public class Microcontroller implements SerialPortEventListener {
             }
             
             String response=new StringBuffer().append(buffer, 0, len).toString();
-            //System.out.println("Out=" + response);
             return response;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -197,11 +201,8 @@ public class Microcontroller implements SerialPortEventListener {
 
     public void serialEvent(SerialPortEvent serialPortEvent) {
         if (serialPortEvent.getEventType()==SerialPortEvent.DATA_AVAILABLE) {
-            //System.out.println("Event Type=DATA_AVAILABLE");
         } else if (serialPortEvent.getEventType()==SerialPortEvent.OUTPUT_BUFFER_EMPTY) {
-            System.out.println("Event Type=OUTPUT_BUFFER_EMPTY");
         } else {
-            System.out.println("Event Type=" + serialPortEvent.getEventType());
         }
     }
 
