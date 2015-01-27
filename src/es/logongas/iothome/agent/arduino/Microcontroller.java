@@ -102,7 +102,7 @@ public class Microcontroller implements SerialPortEventListener {
 
    
     public List<Double> getPowers() {
-        String command=COMMAND_SCT_013_READ + "\n";
+        String command=COMMAND_SCT_013_READ + ";";
         
         sendCommand(command);
         
@@ -117,6 +117,9 @@ public class Microcontroller implements SerialPortEventListener {
         powers.add(power0);
         powers.add(power1);
         powers.add(power2);
+        
+        System.out.println(raw0 + " " + raw1 + " " + raw2);
+        System.out.println(power0 + " " + power1 + " " + power2);
         
         return powers;
         
@@ -138,7 +141,7 @@ public class Microcontroller implements SerialPortEventListener {
      */
     public synchronized void sendCommand(String command)  {
         try {
-            _outputStream.write(command.getBytes(Charset.forName("ISO-8859-15")));
+            _outputStream.write((command).getBytes(Charset.forName("ISO-8859-15")));
             _outputStream.flush();
             
             String status=readLine();
