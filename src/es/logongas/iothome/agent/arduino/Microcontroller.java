@@ -119,6 +119,7 @@ public class Microcontroller implements SerialPortEventListener {
         powers.add(power0);
         powers.add(power1);
         powers.add(power2);
+        powers.add(0.0F);
         
         if ((raw0>1000) ||(raw1>1000) || (raw2>1000)) {
             System.out.println(raw0 + " " + raw1 + " " + raw2);

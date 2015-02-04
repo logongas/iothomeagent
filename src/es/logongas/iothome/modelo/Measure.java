@@ -20,6 +20,7 @@ public class Measure {
     private Float stream0;
     private Float stream1;
     private Float stream2;
+    private Float stream3;
 
     /**
      * @return the idMeasure
@@ -103,6 +104,20 @@ public class Measure {
      */
     public void setStream2(Float stream2) {
         this.stream2 = stream2;
+    }
+
+    /**
+     * @return the stream3
+     */
+    public Float getStream3() {
+        return stream3;
+    }
+
+    /**
+     * @param stream3 the stream3 to set
+     */
+    public void setStream3(Float stream3) {
+        this.stream3 = stream3;
     }
 
 }

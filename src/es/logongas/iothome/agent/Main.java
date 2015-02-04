@@ -88,6 +88,7 @@ public class Main {
         measure.setStream0(powers.get(0));
         measure.setStream1(powers.get(1));
         measure.setStream2(powers.get(2));
+        measure.setStream3(powers.get(3));
         
         return measure;
     }
