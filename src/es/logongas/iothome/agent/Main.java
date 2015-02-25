@@ -10,6 +10,7 @@ import es.logongas.iothome.agent.storage.Storage;
 import es.logongas.iothome.modelo.Measure;
 import es.logongas.iothome.agent.arduino.Microcontroller;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -29,8 +30,7 @@ public class Main {
         try {
             inicialize(args);
 
-            boolean salir = false;
-            while (salir == false) {
+            while (true) {
 
                 try {
 
@@ -46,11 +46,11 @@ public class Main {
                         throw new RuntimeException(ex);
                     }
 
-                    if (System.in.available() > 0) {
-                        salir = true;
-                    }
+
 
                 } catch (Exception ex) {
+                    SimpleDateFormat sdf=new SimpleDateFormat("yyyy.MM.dd  HH:mm:ss");
+                    System.out.println(sdf.format(new Date()));
                     ex.printStackTrace();
                 }
 
